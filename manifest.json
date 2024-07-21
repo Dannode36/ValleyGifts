@@ -1,0 +1,10 @@
+﻿{
+  "Name": "ValleyGifts",
+  "Author": "Dannode36",
+  "Version": "0.1.0",
+  "Description": "See which villagers you are yet to gift today!",
+  "UniqueID": "Dannode36.ValleyGifts",
+  "EntryDll": "ValleyGifts.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}
