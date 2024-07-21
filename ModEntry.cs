@@ -9,31 +9,45 @@ using StardewValley;
 
 namespace ValleyGifts
 {
+    public class Icon
+    {
+        public Image Image { get; set; }
+        public string Name { get; set; }
+
+        public Icon(Image image, string name)
+        {
+            Image = image;
+            Name = name;
+        }
+    }
+
     /// <summary>The mod entry point.</summary>
     internal sealed class ModEntry : Mod
     {
-        private List<Image> villagerIcons = new();
-
+        private List<Icon> villagerIcons = new();
+        private string[] villagerNames = new[]
+        {
+            ""
+        };
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
             helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.Display.RenderedWorld += OnRenderedWorld;
-
             var iconTex = helper.ModContent.Load<Texture2D>("assets/icons.png");
 
             int icons = iconTex.Height / 32;
 
             for (int i = 0; i < icons; i++)
             {
-                villagerIcons.Add(new()
+                villagerIcons.Add(new(new()
                 {
                     Texture = helper.ModContent.Load<Texture2D>("assets/icons.png"),
                     TextureArea = new(0, i * 32, 32, 32),
                     LocalPosition = new(i * 64, 0),
                     Scale = 2f
-                });
+                }, ""));
             }
         }
 
@@ -51,6 +65,7 @@ namespace ValleyGifts
         {
             foreach (var icon in villagerIcons)
             {
+                Game1.player.friendshipData.TryGetValue
                 icon.Draw(e.SpriteBatch);
             }
         }
