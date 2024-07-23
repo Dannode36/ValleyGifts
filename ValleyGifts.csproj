@@ -17,10 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="assets\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="assets\icons.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
