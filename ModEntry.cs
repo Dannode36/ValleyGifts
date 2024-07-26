@@ -22,6 +22,7 @@ namespace ValleyGifts
         public string Name { get; set; }
         public int GiftsToday { get; set; }
         public int GiftsThisWeek { get; set; }
+        public bool IsBirthday {  get; set; }
 
         public Icon(Image image, string name)
         {
@@ -43,10 +44,10 @@ namespace ValleyGifts
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
-            helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.Display.RenderedWorld += OnRenderedWorld;
-            helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
+            helper.Events.Player.InventoryChanged += OnInventoryChanged;
+            helper.Events.GameLoop.DayStarted += OnDayStarted;
 
             IconMap = helper.Data.ReadJsonFile<Dictionary<int, string>>("assets/icons.json") ?? new();
 
@@ -81,19 +82,19 @@ namespace ValleyGifts
             background = helper.ModContent.Load<Texture2D>("assets/white.png");
         }
 
-        private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
+        private void OnDayStarted(object? sender, DayStartedEventArgs e)
         {
-            IridiumStarIcon.Texture = Game1.mouseCursors;
+            UpdateBirthdayData();
         }
 
-        private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
+        private void UpdateGiftData()
         {
             int npcsUpdated = 0;
             Utility.ForEachVillager((npc) =>
             {
                 int i = villagerIcons.FindIndex(x => x.Name == npc.Name);
 
-                if(i > -1)
+                if (i > -1)
                 {
                     if (Game1.player.friendshipData.TryGetValue(npc.Name, out var friendship))
                     {
@@ -111,14 +112,34 @@ namespace ValleyGifts
             });
         }
 
-        /// <summary>Raised after the player presses a button on the keyboard, controller, or mouse.</summary>
-        /// <param name="sender">The event sender.</param>
-        /// <param name="e">The event data.</param>
-        private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
+        private void UpdateBirthdayData()
         {
-            // ignore if player hasn't loaded a save yet
-            if (!Context.IsWorldReady)
-                return;
+            foreach (var icon in villagerIcons)
+            {
+                icon.IsBirthday = false;
+            }
+
+            NPC? npc = Utility.getTodaysBirthdayNPC();
+
+            if(npc != null )
+            {
+                int i = villagerIcons.FindIndex(x => x.Name == npc.Name);
+                if (i > -1)
+                {
+                    villagerIcons[i].IsBirthday = true;
+                }
+            }
+        }
+
+        private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
+        {
+            UpdateGiftData();
+        }
+
+        private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
+        {
+            IridiumStarIcon.Texture = Game1.mouseCursors;
+            UpdateGiftData();
         }
 
         private void OnRenderedWorld(object? sender, RenderedWorldEventArgs e)
@@ -129,9 +150,29 @@ namespace ValleyGifts
             {
                 icon.Image.Draw(e.SpriteBatch);
 
-                GiftIcon.LocalPosition = icon.Image.LocalPosition + new Vector2(icon.Image.Width - GiftIcon.Width, icon.Image.Height - GiftIcon.Height);
-                GiftIcon.Draw(e.SpriteBatch);
-                
+                if(icon.GiftsToday > 0)
+                {
+                    GiftIcon.LocalPosition = icon.Image.LocalPosition + new Vector2(icon.Image.Width - GiftIcon.Width, icon.Image.Height - GiftIcon.Height);
+                    GiftIcon.Draw(e.SpriteBatch);
+
+                    if (icon.GiftsToday > 1)
+                    {
+                        GiftIcon.LocalPosition = icon.Image.LocalPosition + new Vector2(icon.Image.Width - (2 * GiftIcon.Width), icon.Image.Height - GiftIcon.Height);
+                        GiftIcon.Draw(e.SpriteBatch);
+                    }
+                }
+
+                if (icon.IsBirthday)
+                {
+                    IridiumStarIcon.LocalPosition = 
+                        icon.Image.LocalPosition 
+                        + new Vector2(icon.Image.Width - GiftIcon.Width, icon.Image.Height - GiftIcon.Height);
+
+                    IridiumStarIcon.LocalPosition = 
+                        icon.Image.LocalPosition
+                        + new Vector2(icon.Image.Width - IridiumStarIcon.Width, 0);
+
+                }
             }
         }
     }
