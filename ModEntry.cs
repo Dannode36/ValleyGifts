@@ -34,7 +34,7 @@ namespace ValleyGifts
     /// <summary>The mod entry point.</summary>
     internal sealed class ModEntry : Mod
     {
-        Dictionary<int, string> IconMap = new();
+        List<string> IconOrderConfig = new();
         private List<Icon> villagerIcons = new();
         Image GiftIcon;
         Image IridiumStarIcon;
@@ -49,7 +49,7 @@ namespace ValleyGifts
             helper.Events.Player.InventoryChanged += OnInventoryChanged;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
 
-            IconMap = helper.Data.ReadJsonFile<Dictionary<int, string>>("assets/icons.json") ?? new();
+            IconOrderConfig = helper.Data.ReadJsonFile<List<string>>("assets/icons.json") ?? new();
 
             var iconTex = helper.ModContent.Load<Texture2D>("assets/icons.png");
 
@@ -63,7 +63,7 @@ namespace ValleyGifts
                     TextureArea = new(0, i * 32, 32, 32),
                     LocalPosition = new((i % 8) * 64, i / 8 * 64),
                     Scale = 2f
-                }, IconMap[i]));
+                }, IconOrderConfig[i]));
             }
 
             GiftIcon = new()
@@ -108,7 +108,7 @@ namespace ValleyGifts
                     }
                 }
 
-                return npcsUpdated < IconMap.Count;
+                return npcsUpdated < villagerIcons.Count;
             });
         }
 
@@ -155,23 +155,20 @@ namespace ValleyGifts
                     GiftIcon.LocalPosition = icon.Image.LocalPosition + new Vector2(icon.Image.Width - GiftIcon.Width, icon.Image.Height - GiftIcon.Height);
                     GiftIcon.Draw(e.SpriteBatch);
 
-                    if (icon.GiftsToday > 1)
+                    /*if (icon.GiftsToday > 1)
                     {
                         GiftIcon.LocalPosition = icon.Image.LocalPosition + new Vector2(icon.Image.Width - (2 * GiftIcon.Width), icon.Image.Height - GiftIcon.Height);
                         GiftIcon.Draw(e.SpriteBatch);
-                    }
+                    }*/
                 }
 
                 if (icon.IsBirthday)
                 {
                     IridiumStarIcon.LocalPosition = 
-                        icon.Image.LocalPosition 
-                        + new Vector2(icon.Image.Width - GiftIcon.Width, icon.Image.Height - GiftIcon.Height);
-
-                    IridiumStarIcon.LocalPosition = 
                         icon.Image.LocalPosition
                         + new Vector2(icon.Image.Width - IridiumStarIcon.Width, 0);
 
+                    IridiumStarIcon.Draw(e.SpriteBatch);
                 }
             }
         }
